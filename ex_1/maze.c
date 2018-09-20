@@ -131,7 +131,13 @@ static void addToGrid (grid_t* gridPtr, vector_t* vectorPtr, char* type){
     long n = vector_getSize(vectorPtr);
     for (i = 0; i < n; i++) {
         coordinate_t* coordinatePtr = (coordinate_t*)vector_at(vectorPtr, i);
-        // TODO validar ponto
+            if((coordinatePtr->x < 0 ||coordinatePtr->y < 0 ||
+            coordinatePtr->z < 0) || (coordinatePtr->x > gridPtr->width - 1 ||
+            coordinatePtr->y > gridPtr->height - 1 || coordinatePtr->z >
+            gridPtr->depth - 1)){
+                printf("error\n");
+                abort();
+            }
     }
     grid_addPath(gridPtr, vectorPtr);
 }
