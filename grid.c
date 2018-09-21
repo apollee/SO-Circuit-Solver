@@ -239,7 +239,7 @@ void grid_print (grid_t* gridPtr){
         printf("[z = %li]\n", z);
         for(y = 0; y < number_y; y++){
             for(x = 0; x < number_x; x++){
-                printf("%li ", grid_getPoint(gridPtr, x, y, z));
+                printf("%4li", grid_getPoint(gridPtr, x, y, z));
             }
             printf("\n");
         }
