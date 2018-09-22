@@ -56,6 +56,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lib/list.h"
+#include "grid.h"
 #include "maze.h"
 #include "router.h"
 #include "lib/timer.h"
@@ -199,7 +200,7 @@ int main(int argc, char** argv){
     bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, global_doPrint);
     assert(status == TRUE);
     puts("Verification passed.");
-
+    //grid_print(mazePtr->gridPtr); NOT RIGHT
     maze_free(mazePtr);
     router_free(routerPtr);
 
