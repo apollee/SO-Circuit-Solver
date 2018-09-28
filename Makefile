@@ -18,10 +18,13 @@ list.o: lib/list.c lib/list.h lib/types.c
 	gcc $(CFLAGS) -c list.c -o list.o
 
 pair.o: lib/pair.c lib/pair.h
+	gcc $(CFLAGS) -c lib/par.c -o pair.o
 
 queue.o: lib/queue.c lib/queue.h lib/types.h
+	gcc $(CFLAGS) -c lib/queue.c -o queue.o
 
 vector.o: lib/vector.c lib/vector.h lib/utility.h
+	gcc $(CFLAGS) -c lib/vector.c -o vector.o
 
 clean:
 	rm -f *.o lib/*.o CircuitRouter-SeqSolver
