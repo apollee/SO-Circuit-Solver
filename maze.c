@@ -54,6 +54,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include "coordinate.h"
 #include "grid.h"
 #include "lib/list.h"
@@ -131,12 +133,16 @@ static void addToGrid (grid_t* gridPtr, vector_t* vectorPtr, char* type){
     long n = vector_getSize(vectorPtr);
     for (i = 0; i < n; i++) {
         coordinate_t* coordinatePtr = (coordinate_t*)vector_at(vectorPtr, i);
-        if(!(grid_isPointValid(gridPtr, coordinatePtr->x, coordinatePtr->y,
-            coordinatePtr->z))){
-            printf("error\n");
-            abort();
+        if (!grid_isPointValid(gridPtr,
+                               coordinatePtr->x,
+                               coordinatePtr->y,
+                               coordinatePtr->z))
+        {
+            fprintf(stderr, "Error: %s (%li, %li, %li) invalid\n",
+                    type, coordinatePtr->x, coordinatePtr->y, coordinatePtr->z);
+            exit(1);
         }
-     }
+    }
     grid_addPath(gridPtr, vectorPtr);
 }
 
@@ -146,11 +152,12 @@ static void addToGrid (grid_t* gridPtr, vector_t* vectorPtr, char* type){
  * =============================================================================
  */
 
-long maze_read (maze_t* mazePtr){
+long maze_read (maze_t* mazePtr, FILE *file, const char* file_name){
     
     /*
      * Parse input from stdin
      */
+    FILE *output_file;
     long lineNumber = 0;
     long height = -1;
     long width  = -1;
@@ -161,7 +168,7 @@ long maze_read (maze_t* mazePtr){
     vector_t* srcVectorPtr = mazePtr->srcVectorPtr;
     vector_t* dstVectorPtr = mazePtr->dstVectorPtr;
     
-    while (fgets(line, sizeof(line), stdin)) {
+    while (fgets(line, sizeof(line), file)) {
         
         char code;
         long x1, y1, z1;
@@ -244,8 +251,13 @@ long maze_read (maze_t* mazePtr){
     addToGrid(gridPtr, wallVectorPtr, "wall");
     addToGrid(gridPtr, srcVectorPtr,  "source");
     addToGrid(gridPtr, dstVectorPtr,  "destination");
-    printf("Maze dimensions = %li x %li x %li\n", width, height, depth);
-    printf("Paths to route  = %li\n", list_getSize(workListPtr));
+   
+    output_file = fopen(file_name, "w");
+    printf("%s\n", file_name);
+    fprintf(output_file, "Maze dimensions = %li x %li x %li\n", width, height, depth);
+    fprintf(output_file, "Paths to route  = %li\n", list_getSize(workListPtr));
+    fclose(output_file);
+ 
     /*
      * Initialize work queue
      */
@@ -265,7 +277,7 @@ long maze_read (maze_t* mazePtr){
  * maze_checkPaths
  * =============================================================================
  */
-bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPrintPaths){
+bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, const char* file_name){
     grid_t* gridPtr = mazePtr->gridPtr;
     long width  = gridPtr->width;
     long height = gridPtr->height;
@@ -353,16 +365,67 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, bool_t doPri
             }
         } /* iteratate over pathVector */
     } /* iterate over pathVectorList */
-
-    if (doPrintPaths) {
-        puts("\nRouted Maze:");
-        grid_print(testGridPtr);
-    }
+    
+    grid_print(testGridPtr, file_name);
     
     grid_free(testGridPtr);
 
     return TRUE;
 }
+
+/* =============================================================================
+ * output_fname
+ * =============================================================================
+ */
+
+const char* output_fname(char* name_file){
+    
+    /*changing the name to the right file extension*/
+    strcat(name_file, ".res");
+
+
+    int flag, flag_1;
+    char* old_name = malloc(sizeof(char) * (strlen(name_file) + 1));
+    strcpy(old_name, name_file);
+
+    flag = file_exists(name_file); /*checks if filename.txt.res exists*/
+     
+    if(flag){
+        strcat(name_file, ".old");
+        flag = file_exists(name_file); /*checks if filename.txt.res.out exists*/
+        
+        if(flag){
+            unlink(name_file); 
+            exit(0);
+            /*o que e' que se faz neste caso?*/
+        }else{
+            flag_1 = rename(old_name, name_file);
+            if(flag_1 != 0){
+                exit(0);
+            }
+            return name_file;
+        }
+    }
+
+    /*free((char*)name_file); how can i free it??*/
+    return name_file;
+}
+
+/* =============================================================================
+ * file_exists
+ * =============================================================================
+ */
+
+    int file_exists(const char * name_file){
+
+        FILE *file;
+
+        if ((file = fopen(name_file, "r"))){
+            fclose(file);
+            return 1;
+        }
+        return 0;
+    }
 
 
 /* =============================================================================

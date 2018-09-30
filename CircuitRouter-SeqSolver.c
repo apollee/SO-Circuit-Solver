@@ -56,7 +56,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lib/list.h"
-#include "grid.h"
 #include "maze.h"
 #include "router.h"
 #include "lib/timer.h"
@@ -122,7 +121,7 @@ static void parseArgs (long argc, char* const argv[]){
 
     setDefaultParams();
 
-    while ((opt = getopt(argc, argv, "b:px:y:z:")) != -1) {
+    while ((opt = getopt(argc, argv, "hb:px:y:z:")) != -1) {
         switch (opt) {
             case 'b':
             case 'x':
@@ -147,7 +146,7 @@ static void parseArgs (long argc, char* const argv[]){
     }
 
     if (opterr) {
-        displayUsage(argv[0]);
+       /* displayUsage(argv[0]); */ 
     }
 }
 
@@ -160,11 +159,30 @@ int main(int argc, char** argv){
     /*
      * Initialization
      */
+    
+    FILE *file;
+    FILE *output_file;
+    const char* file_name = malloc(sizeof(char) * 240);
+
+    if(argc >= 2){
+        file = fopen(argv[1], "r");
+    }else{
+        printf("You didn't pass a file as an argument");
+    }
+
+    /*checking if the file exists*/
+    if(file == NULL){ /*is this needed?*/
+        printf("The file could not be opened.\n");
+        exit(0);
+    }
+   
+    file_name = output_fname(argv[1]); /*returns the name of the output file*/ 
+ 
     parseArgs(argc, (char** const)argv);
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
-    long numPathToRoute = maze_read(mazePtr);
+    long numPathToRoute = maze_read(mazePtr, file, file_name);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -189,18 +207,21 @@ int main(int argc, char** argv){
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
         numPathRouted += vector_getSize(pathVectorPtr);
 	}
-    printf("Paths routed    = %li\n", numPathRouted);
-    printf("Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
-
+ 
+    /*opening the file to append a part of the output*/
+    output_file = fopen(file_name, "a");
+    fprintf(output_file, "Paths routed    = %li\n", numPathRouted);
+    fprintf(output_file, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
+    fclose(output_file);
 
     /*
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
-    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, global_doPrint);
+    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, file_name);
     assert(status == TRUE);
     puts("Verification passed.");
-    //grid_print(mazePtr->gridPtr); NOT RIGHT
+
     maze_free(mazePtr);
     router_free(routerPtr);
 
@@ -216,7 +237,8 @@ int main(int argc, char** argv){
     }
     list_free(pathVectorListPtr);
 
-
+    fclose(file);
+    /*free((char*)file_name);  how can i free it?*/
     exit(0);
 }
 

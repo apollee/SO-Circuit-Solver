@@ -53,6 +53,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "coordinate.h"
 #include "grid.h"
 #include "lib/queue.h"

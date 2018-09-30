@@ -1,31 +1,34 @@
-CFLAGS = -g -Wall -pedantic
+# Makefile, versao 1
+# Sistemas Operativos, DEI/IST/ULisboa 2018-19
 
-CircuitRouter-SeqSolver: coordinate.o grid.o CircuitRouter-SeqSolver.o maze.o router.o lib/list.o lib/pair.o lib/queue.o lib/vector.o -lm
+SOURCES = router.c maze.c grid.c coordinate.c CircuitRouter-SeqSolver.c
+SOURCES+= ../lib/vector.c ../lib/queue.c ../lib/list.c ../lib/pair.c
+OBJS = $(SOURCES:%.c=%.o)
+CC   = gcc
+CFLAGS =-Wall -std=gnu99 -I../
+LDFLAGS=-lm
+TARGET = CircuitRouter-SeqSolver
 
-coordinate.o: coordinate.c
-	gcc $(CFLAGS) -c coordinate.c -o coordinate.o
-grid.o: grid.c grid.h coordinate.h lib/types.h lib/vector.h
-	gcc $(CFLAGS) -c grid.c -o grid.o
-CircuitRouter-SeqSolver.o: CircuitRouter-SeqSolver.c lib/list.h grid.h maze.h router.h lib/timer.h lib/types.h
-	gcc $(CFLAGS) -c CircuitRouter-SeqSolver.c -o CircuitRouter-SeqSolver.o
-maze.o: maze.c maze.h coordinate.h grid.h lib/list.h lib/queue.h lib/pair.h lib/types.h lib/vector.h
-	gcc $(CFLAGS) -c maze.c -o maze.o
+all: $(TARGET)
 
-router.o: router.c router.h coordinate.h grid.h lib/queue.h lib/vector.h
-	gcc $(CFLAGS) -c router.c -o router.o
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
-list.o: lib/list.c lib/list.h lib/types.c
-	gcc $(CFLAGS) -c list.c -o list.o
+CircuitRouter-SeqSolver.o: CircuitRouter-SeqSolver.c maze.h router.h ../lib/list.h ../lib/timer.h ../lib/types.h
+router.o: router.c router.h coordinate.h grid.h ../lib/queue.h ../lib/vector.h
+maze.o: maze.c maze.h coordinate.h grid.h ../lib/list.h ../lib/queue.h ../lib/pair.h ../lib/types.h ../lib/vector.h
+grid.o: grid.c grid.h coordinate.h ../lib/types.h ../lib/vector.h
+coordinate.o: coordinate.c coordinate.h ../lib/pair.h ../lib/types.h
+../lib/vector.o: ../lib/vector.c ../lib/vector.h ../lib/types.h ../lib/utility.h
+../lib/queue.o: ../lib/queue.c ../lib/queue.h ../lib/types.h
+../lib/list.o: ../lib/list.c ../lib/list.h ../lib/types.h
+../lib/pair.o: ../lib/pair.c ../lib/pair.h
 
-pair.o: lib/pair.c lib/pair.h
-	gcc $(CFLAGS) -c lib/par.c -o pair.o
-
-queue.o: lib/queue.c lib/queue.h lib/types.h
-	gcc $(CFLAGS) -c lib/queue.c -o queue.o
-
-vector.o: lib/vector.c lib/vector.h lib/utility.h
-	gcc $(CFLAGS) -c lib/vector.c -o vector.o
+$(OBJS):
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o lib/*.o CircuitRouter-SeqSolver
+	@echo Cleaning...
+	rm -f $(OBJS) $(TARGET)
+
 
