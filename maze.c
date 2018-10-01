@@ -253,7 +253,6 @@ long maze_read (maze_t* mazePtr, FILE *file, const char* file_name){
     addToGrid(gridPtr, dstVectorPtr,  "destination");
    
     output_file = fopen(file_name, "w");
-    printf("%s\n", file_name);
     fprintf(output_file, "Maze dimensions = %li x %li x %li\n", width, height, depth);
     fprintf(output_file, "Paths to route  = %li\n", list_getSize(workListPtr));
     fclose(output_file);
@@ -378,55 +377,31 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, const char* 
  * =============================================================================
  */
 
-const char* output_fname(char* name_file){
+char* output_fname(char* name_file){
     
     /*changing the name to the right file extension*/
     strcat(name_file, ".res");
 
 
-    int flag, flag_1;
     char* old_name = malloc(sizeof(char) * (strlen(name_file) + 1));
     strcpy(old_name, name_file);
-
-    flag = file_exists(name_file); /*checks if filename.txt.res exists*/
-     
-    if(flag){
+ 
+    if(access(name_file, F_OK) != -1){ /*checks if filename.txt.res exists*/
         strcat(name_file, ".old");
-        flag = file_exists(name_file); /*checks if filename.txt.res.out exists*/
         
-        if(flag){
-            unlink(name_file); 
-            exit(0);
-            /*o que e' que se faz neste caso?*/
+        if(access(name_file, F_OK) != -1){ /*checks if filename.txt.res.old exists*/
+            unlink(name_file);
+            rename(old_name, name_file); 
+            return old_name;
         }else{
-            flag_1 = rename(old_name, name_file);
-            if(flag_1 != 0){
-                exit(0);
-            }
-            return name_file;
+            rename(old_name, name_file); 
+            return old_name;
         }
     }
-
+    
     /*free((char*)name_file); how can i free it??*/
     return name_file;
 }
-
-/* =============================================================================
- * file_exists
- * =============================================================================
- */
-
-    int file_exists(const char * name_file){
-
-        FILE *file;
-
-        if ((file = fopen(name_file, "r"))){
-            fclose(file);
-            return 1;
-        }
-        return 0;
-    }
-
 
 /* =============================================================================
  *
