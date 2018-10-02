@@ -113,24 +113,19 @@ static void setDefaultParams (){
  * parseArgs
  * =============================================================================
  */
-static void parseArgs (long argc, char* const argv[]){
-    long i;
+char* parseArgs (long argc, char* const argv[]){
     long opt;
-
     opterr = 0;
 
     setDefaultParams();
 
-    while ((opt = getopt(argc, argv, "hb:px:y:z:")) != -1) {
+    while ((opt = getopt(argc, argv, "hb:x:y:z:")) != -1) {
         switch (opt) {
             case 'b':
             case 'x':
             case 'y':
             case 'z':
                 global_params[(unsigned char)opt] = atol(optarg);
-                break;
-            case 'p':
-                global_doPrint = TRUE;
                 break;
             case '?':
             case 'h':
@@ -139,15 +134,22 @@ static void parseArgs (long argc, char* const argv[]){
                 break;
         }
     }
-
-    for (i = optind; i < argc; i++) {
-        fprintf(stderr, "Non-option argument: %s\n", argv[i]);
+     
+    if(optind ==  argc - 1){
+        return argv[optind];
+    }else if(optind > argc - 1){
+        fprintf(stderr, "Non-optional arguments\n");
         opterr++;
+    }else{
+        fprintf(stderr, "No file name.\n");
     }
 
-    if (opterr) {
-       /* displayUsage(argv[0]); */ 
+
+    if (opterr){ 
+        displayUsage(argv[0]);
     }
+
+    return NULL; 
 }
 
 
@@ -161,28 +163,24 @@ int main(int argc, char** argv){
      */
     
     FILE *file;
-    FILE *output_file;
-    const char* file_name = malloc(sizeof(char) * 240);
+    FILE *output_file; 
+    char* file_name = malloc(sizeof(char) * 240);
+    char* file_output_name = malloc(sizeof(char) * 240); 
 
-    if(argc >= 2){
-        file = fopen(argv[1], "r");
-    }else{
-        printf("You didn't pass a file as an argument");
-    }
+    file_name = parseArgs(argc, (char** const)argv);
+    file = fopen(file_name, "r");    
 
-    /*checking if the file exists*/
-    if(file == NULL){ /*is this needed?*/
-        printf("The file could not be opened.\n");
-        exit(0);
-    }
-   
-    file_name = output_fname(argv[1]); /*returns the name of the output file*/ 
- 
-    parseArgs(argc, (char** const)argv);
+    /*verificar se o ficheiro de entrada  e' valido*/
+    /*if(file == NULL){ 
+        abort();
+    }*/
+
+    
+    file_output_name = output_fname(file_name); /*returns the name of the output file*/ 
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
 
-    long numPathToRoute = maze_read(mazePtr, file, file_name);
+    long numPathToRoute = maze_read(mazePtr, file, file_output_name);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -209,7 +207,7 @@ int main(int argc, char** argv){
 	}
  
     /*opening the file to append a part of the output*/
-    output_file = fopen(file_name, "a");
+    output_file = fopen(file_output_name, "a");
     fprintf(output_file, "Paths routed    = %li\n", numPathRouted);
     fprintf(output_file, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
     fclose(output_file);
@@ -218,7 +216,7 @@ int main(int argc, char** argv){
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
-    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, file_name);
+    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, file_output_name);
     assert(status == TRUE);
     puts("Verification passed.");
 
@@ -238,7 +236,8 @@ int main(int argc, char** argv){
     list_free(pathVectorListPtr);
 
     fclose(file);
-    /*free((char*)file_name);  how can i free it?*/
+    /*free((char*)file_name); */
+    /*free((char*)file_output_name);  how can i free it?*/
     exit(0);
 }
 
