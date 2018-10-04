@@ -7,11 +7,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "commandlinereader.h"
+#include "../lib/list.h"
 #include "CircuitRouter-SimpleShell.h"
 
+typedef struct process{
+    int pid;
+    int status;
+}*process_t;    
+
+
 int main(int argc, char** argv){
-    int max_children;    
-    
+    int max_children;
+    list_t* list_pids = list_alloc(NULL);   
+
+ 
     if(argc == 2){
         max_children = atoi(argv[1]);
     }
@@ -30,9 +39,11 @@ int main(int argc, char** argv){
             
     
         int number_args = readLineArguments(args, MAXARGS + 1, buffer, BUFFERSIZE);
-        //int number_args = readLineArguments(args, MAXARGS + 1, buffer, BUFFERSIZE);
     
-        /*if no argument is inserted then the program will keep waiting for user input*/
+        /*if no argument is inserted then the program will keep waiting for valid user input*/
+        if(number_args == 0){
+            continue;
+        }
  
         /*command exit*/
         if(strcmp(args[0], COMMAND_EXIT) == 0){
@@ -52,6 +63,7 @@ int main(int argc, char** argv){
                 continue;
             }
             file_name = args[1];
+            start_process(max_children, file_name, list_pids);
             /*exec file_name and start process*/
         }
         
