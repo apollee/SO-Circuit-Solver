@@ -1,0 +1,15 @@
+CFLAGS = -g -Wall -pedantic
+
+CircuitRouter-SimpleShell: CircuitRouter-SimpleShell.o commandlinereader.o run_command.o
+
+CircuitRouter-SimpleShell.o: CircuitRouter-SimpleShell.c CircuitRouter-SimpleShell.h commandlinereader.h lib/list.h 
+	gcc $(CFLAGS) -c CircuitRouter-SimpleShell.c CircuitRouter-SimpleShell.o
+
+commandlinereader.o: commandlinereader.c commandlinereader.h
+	gcc $(CFLAGS) -c commandlinereader.c commandlinereader.o
+
+run_command.o: run_command.c run_command.h
+	gcc $(CFLAGS) -c run_command.c run_command.o	
+
+clean:
+	rm -f *.o lib/*.o CircuitRouter-SeqSolver
