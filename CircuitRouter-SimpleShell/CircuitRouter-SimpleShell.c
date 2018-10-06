@@ -6,18 +6,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include "commandlinereader.h"
 #include "../lib/list.h"
-#include "CircuitRouter-SimpleShell.h"
+#include "run_command.h"
 
-typedef struct process{
-    int pid;
-    int status;
-}*process_t;    
+#define BUFFERSIZE 500
+#define MAXARGS 5
 
+#define COMMAND_RUN "run"
+#define COMMAND_EXIT "exit"
+
+int counter = 0;
 
 int main(int argc, char** argv){
-    int max_children;
+    int max_children = -1;
     list_t* list_pids = list_alloc(NULL);   
 
  
@@ -25,18 +30,10 @@ int main(int argc, char** argv){
         max_children = atoi(argv[1]);
     }
 
-    if(max_children == 0){
-        /*IGNORE IT;*/
-        printf("ignore max_children\n");
-    }
-
-
   
     while(1){
         char *args[MAXARGS + 1]; 
         char buffer[BUFFERSIZE];
-        char *file_name = malloc(sizeof(char) * 500);
-            
     
         int number_args = readLineArguments(args, MAXARGS + 1, buffer, BUFFERSIZE);
     
@@ -48,7 +45,7 @@ int main(int argc, char** argv){
         /*command exit*/
         if(strcmp(args[0], COMMAND_EXIT) == 0){
             if(number_args >= 2){
-                printf("Invalid sintax for the command %s, try again.\n", COMMAND_EXIT);
+                printf("Invalid sintax, try again.\n");
                 continue;
             }
             break;
@@ -59,19 +56,23 @@ int main(int argc, char** argv){
         /*command run*/ 
         else if(strcmp(args[0], COMMAND_RUN) == 0){
             if(number_args < 2 || number_args >= 3){
-                printf("Invalid sintax for the command %s, try again.\n", COMMAND_RUN);
+                printf("Invalid syntax, try again.\n");
                 continue;
             }
-            file_name = args[1];
-            start_process(max_children, file_name, list_pids);
+
+            if(access(args[1], R_OK) == -1){
+                printf("File doesnt exist, try again.\n");
+                continue;
+            }
+            counter++;
+            start_process(max_children, args[1], list_pids, counter);
             /*exec file_name and start process*/
         }
         
 
         else{
             printf("Invalid sintax or unknown command, try again.\n");
-            continue;
-        } 
+        }
         
     }
     return 0;
