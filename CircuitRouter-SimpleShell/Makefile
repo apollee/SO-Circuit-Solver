@@ -11,8 +11,8 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $(TARGET) $(LDFLAGS) 
 
 commandlinereader.o: commandlinereader.c commandlinereader.h
-run_command.o: run_command.c run_command.h ../lib/list.h
-CircuitRouter-SimpleShell.o: CircuitRouter-SimpleShell.c ../lib/timer.h commandlinereader.h run_command.h
+link.o: link.c link.h CircuitRouter-SimpleShell.h
+CircuitRouter-SimpleShell.o: CircuitRouter-SimpleShell.c CircuitRouter-SimpleShell.h commandlinereader.h link.h
 
 $(OBJS):
 	$(CC) $(CFLAGS) -c -o $@ $<
