@@ -161,7 +161,7 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr);
  * grid_print
  * =============================================================================
  */
-void grid_print (grid_t* gridPtr, const char* file_name);
+void grid_print (grid_t* gridPtr, FILE *file_name);
 
 
 #endif /* GRID_H */

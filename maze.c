@@ -152,12 +152,11 @@ static void addToGrid (grid_t* gridPtr, vector_t* vectorPtr, char* type){
  * =============================================================================
  */
 
-long maze_read (maze_t* mazePtr, FILE *file, const char* file_name){
+long maze_read (maze_t* mazePtr, FILE *file, FILE *file_name){
     
     /*
      * Parse input from stdin
      */
-    FILE *output_file;
     long lineNumber = 0;
     long height = -1;
     long width  = -1;
@@ -252,10 +251,8 @@ long maze_read (maze_t* mazePtr, FILE *file, const char* file_name){
     addToGrid(gridPtr, srcVectorPtr,  "source");
     addToGrid(gridPtr, dstVectorPtr,  "destination");
    
-    output_file = fopen(file_name, "w");
-    fprintf(output_file, "Maze dimensions = %li x %li x %li\n", width, height, depth);
-    fprintf(output_file, "Paths to route  = %li\n", list_getSize(workListPtr));
-    fclose(output_file);
+    fprintf(file_name, "Maze dimensions = %li x %li x %li\n", width, height, depth);
+    fprintf(file_name, "Paths to route  = %li\n", list_getSize(workListPtr));
  
     /*
      * Initialize work queue
@@ -276,7 +273,7 @@ long maze_read (maze_t* mazePtr, FILE *file, const char* file_name){
  * maze_checkPaths
  * =============================================================================
  */
-bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, const char* file_name){
+bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, FILE *file_name){
     grid_t* gridPtr = mazePtr->gridPtr;
     long width  = gridPtr->width;
     long height = gridPtr->height;
@@ -374,6 +371,8 @@ bool_t maze_checkPaths (maze_t* mazePtr, list_t* pathVectorListPtr, const char* 
 
 /* =============================================================================
  * output_fname
+ * receives a char* with the name of the input file and adds the right extension 
+ * to the name 
  * =============================================================================
  */
 
@@ -399,7 +398,6 @@ char* output_fname(char* name_file){
         }
     }
     
-    /*free((char*)name_file); how can i free it??*/
     return name_file;
 }
 

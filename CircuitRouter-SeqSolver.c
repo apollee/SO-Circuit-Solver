@@ -164,23 +164,19 @@ int main(int argc, char** argv){
     
     FILE *file;
     FILE *output_file; 
-    char* file_name = malloc(sizeof(char) * 240);
-    char* file_output_name = malloc(sizeof(char) * 240); 
+    char* file_name = malloc(sizeof(char) * 500);
+    char* file_output_name = malloc(sizeof(char) * 500); 
 
     file_name = parseArgs(argc, (char** const)argv);
     file = fopen(file_name, "r");    
 
-    /*verificar se o ficheiro de entrada  e' valido*/
-    /*if(file == NULL){ 
-        abort();
-    }*/
-
-    
+   
     file_output_name = output_fname(file_name); /*returns the name of the output file*/ 
+    output_file = fopen(file_output_name, "a");
+
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
-
-    long numPathToRoute = maze_read(mazePtr, file, file_output_name);
+    long numPathToRoute = maze_read(mazePtr, file, output_file);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -206,19 +202,16 @@ int main(int argc, char** argv){
         numPathRouted += vector_getSize(pathVectorPtr);
 	}
  
-    /*opening the file to append a part of the output*/
-    output_file = fopen(file_output_name, "a");
     fprintf(output_file, "Paths routed    = %li\n", numPathRouted);
     fprintf(output_file, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
-    fclose(output_file);
 
     /*
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
-    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, file_output_name);
+    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, output_file);
     assert(status == TRUE);
-    puts("Verification passed.");
+    fprintf(output_file, "Verification passed.");
 
     maze_free(mazePtr);
     router_free(routerPtr);
@@ -236,8 +229,9 @@ int main(int argc, char** argv){
     list_free(pathVectorListPtr);
 
     fclose(file);
-    /*free((char*)file_name); */
-    /*free((char*)file_output_name);  how can i free it?*/
+    fclose(output_file);
+    /* free(file_output_name); invalid pointer ??? */
+    /* free(file_name); free(): invalid pointer ??? */
     exit(0);
 }
 
