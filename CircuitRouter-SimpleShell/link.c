@@ -3,6 +3,12 @@
 #include "CircuitRouter-SimpleShell.h"
 #include "link.h"
 
+
+/* =============================================================================
+ * push
+ * receives the head of the list and inserts a process
+ * =============================================================================
+ */
 void push(struct Node** head_ref, process process_n){ 
     
     struct Node* new_node = (struct Node*) malloc(sizeof(struct Node)); 
@@ -11,6 +17,12 @@ void push(struct Node** head_ref, process process_n){
     (*head_ref)    = new_node; 
 }
 
+/* =============================================================================
+ * print_it
+ * receives the head of the list and prints the pid and status of the child 
+ * processes
+ * =============================================================================
+ */
 void print_it(struct Node* head){ 
     struct Node* current = head;  
 
@@ -23,3 +35,24 @@ void print_it(struct Node* head){
         current = current->next; 
     } 
 }
+
+
+/* =============================================================================
+ * delete_it
+ * receives the head of the list and deletes the list while freeing memory
+ * =============================================================================
+ */
+void delete_it(struct Node** head){ 
+   struct Node* current = *head; 
+   struct Node* next; 
+  
+   while (current != NULL){ 
+       next = current->next;
+       free(current->process_r);
+       free(current); 
+       current = next; 
+   } 
+    
+   *head = NULL; 
+} 
+

@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include "commandlinereader.h"
-#include "new.h"
+#include "CircuitRouter-SimpleShell.h"
 #include "link.h"
 
 int counter = 0;
@@ -36,8 +36,9 @@ int main(int argc, char ** argv){
                 printf("%s\n", ERROR_COMMAND);
                 continue;
             }
-            if(max_children != -1){ /*max_children defined*/
+            if(max_children != -1){ //max_children defined
                 print_it(head); //list with dead processes
+                delete_it(&head);
             }
  
             for(i = 0; i < counter; i++){ //waiting for processes to end
