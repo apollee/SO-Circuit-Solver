@@ -27,7 +27,7 @@ void print_it(struct Node* head){
     struct Node* current = head;  
 
     while (current != NULL){ 
-        if(current->process_r->status){
+        if(!(current->process_r->status)){
             printf("CHILD EXITED (PID=%d; return OK)\n", current->process_r->pid);
         }else{
             printf("CHILD EXITED (PID=%d; return NOK)\n", current->process_r->pid); 
