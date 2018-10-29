@@ -100,6 +100,7 @@ router_t* router_alloc (long xCost, long yCost, long zCost, long bendCost){
         routerPtr->yCost = yCost;
         routerPtr->zCost = zCost;
         routerPtr->bendCost = bendCost;
+        pthread_mutex_t lock;
     }
 
     return routerPtr;

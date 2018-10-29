@@ -64,6 +64,7 @@ typedef struct router {
     long yCost;
     long zCost;
     long bendCost;
+    pthread_mutex_t lock;
 } router_t;
 
 typedef struct router_solve_arg {

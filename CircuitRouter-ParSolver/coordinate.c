@@ -54,6 +54,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "coordinate.h"
 #include "lib/pair.h"
 #include "lib/types.h"
@@ -71,6 +72,7 @@ coordinate_t* coordinate_alloc (long x, long y, long z){
         coordinatePtr->x = x;
         coordinatePtr->y = y;
         coordinatePtr->z = z;
+        pthread_mutex_init(&(coordinatePtr->lock), NULL);
     }
 
     return coordinatePtr;

@@ -56,6 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "coordinate.h"
 #include "grid.h"
 #include "lib/list.h"
@@ -80,6 +81,7 @@ maze_t* maze_alloc (){
         mazePtr->wallVectorPtr = vector_alloc(1);
         mazePtr->srcVectorPtr = vector_alloc(1);
         mazePtr->dstVectorPtr = vector_alloc(1);
+        pthread_mutex_init(&(mazePtr->lock),NULL);
         assert(mazePtr->workQueuePtr &&
                mazePtr->wallVectorPtr &&
                mazePtr->srcVectorPtr &&

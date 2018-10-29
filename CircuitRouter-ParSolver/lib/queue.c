@@ -94,8 +94,7 @@ enum config {
  * queue_alloc
  * =============================================================================
  */
-queue_t*
-queue_alloc (long initCapacity)
+queue_t* queue_alloc (long initCapacity)
 {
     queue_t* queuePtr = (queue_t*)malloc(sizeof(queue_t));
 
@@ -109,7 +108,7 @@ queue_alloc (long initCapacity)
         queuePtr->pop      = capacity - 1;
         queuePtr->push     = 0;
         queuePtr->capacity = capacity;
-        pthread_mutex_init(queue->&lock);
+        pthread_mutex_init(queuePtr->&lock);
     }
 
     return queuePtr;
@@ -132,8 +131,7 @@ queue_free (queue_t* queuePtr)
  * queue_isEmpty
  * =============================================================================
  */
-bool_t
-queue_isEmpty (queue_t* queuePtr)
+bool_t queue_isEmpty (queue_t* queuePtr)
 {
     long pop      = queuePtr->pop;
     long push     = queuePtr->push;

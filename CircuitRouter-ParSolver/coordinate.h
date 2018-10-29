@@ -61,6 +61,7 @@ typedef struct coordinate {
     long x;
     long y;
     long z;
+    pthread_mutex_t lock;
 } coordinate_t;
 
 

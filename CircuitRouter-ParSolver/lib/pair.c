@@ -70,6 +70,7 @@
 
 
 #include <stdlib.h>
+#include <pthread.h>
 #include "pair.h"
 
 
@@ -87,6 +88,7 @@ pair_alloc (void* firstPtr, void* secondPtr)
     if (pairPtr != NULL) {
         pairPtr->firstPtr = firstPtr;
         pairPtr->secondPtr = secondPtr;
+        pthread_mutex_init(pairPtr->&lock);
     }
 
     return pairPtr;

@@ -80,6 +80,7 @@ extern "C" {
 typedef struct pair {
     void* firstPtr;
     void* secondPtr;
+    pthread_mutex_t lock;
 } pair_t;
 
 

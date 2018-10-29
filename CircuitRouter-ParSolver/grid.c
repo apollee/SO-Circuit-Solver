@@ -76,7 +76,7 @@ grid_t* grid_alloc (long width, long height, long depth){
         gridPtr->width  = width;
         gridPtr->height = height;
         gridPtr->depth  = depth;
-        pthread_mutex_init(gridPtr->&lock);
+        pthread_mutex_init(&(gridPtr->lock), NULL);
         long n = width * height * depth;
         long* points_unaligned = (long*)malloc(n * sizeof(long) + CACHE_LINE_SIZE);
         assert(points_unaligned);
@@ -124,7 +124,6 @@ bool_t grid_isPointValid (grid_t* gridPtr, long x, long y, long z){
         y < 0 || y >= gridPtr->height ||
         z < 0 || z >= gridPtr->depth)
     {
-        pthread_mutex_lock(&lock); /*duvida*/
         return FALSE;
     } 
     return TRUE;
