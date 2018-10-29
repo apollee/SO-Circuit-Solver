@@ -167,12 +167,16 @@ int main(int argc, char** argv){
         }
     
     }
-   
 
-    /*router_solve((void *)&routerArg);*/
+    for(i=0; i < N_threads; i++){
+        pthread_join(tid[i], NULL);
+    }
+   
+     /*router_solve((void *)&routerArg);*/
 
     TIMER_T stopTime;
     TIMER_READ(stopTime);
+
 
     long numPathRouted = 0;
     list_iter_t it;
