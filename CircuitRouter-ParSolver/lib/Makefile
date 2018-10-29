@@ -1,4 +1,4 @@
-CFLAGS = -Wall -g -std=gnu99
+CFLAGS = -Wall -g -std=gnu99 -pthread
 SOURCES=$(wildcard *.c)
 OBJS = $(SOURCES:%.c=%.o) $(wildcard ../lib/*.o)
 CC = gcc
