@@ -108,7 +108,7 @@ queue_t* queue_alloc (long initCapacity)
         queuePtr->pop      = capacity - 1;
         queuePtr->push     = 0;
         queuePtr->capacity = capacity;
-        pthread_mutex_init(queuePtr->&lock);
+        pthread_mutex_init(&(queuePtr->lock),NULL);
     }
 
     return queuePtr;
@@ -215,19 +215,21 @@ queue_push (queue_t* queuePtr, void* dataPtr)
 void*
 queue_pop (queue_t* queuePtr)
 {
-    pthread_mutex_lock(queuePtr->&lock);
+    pthread_mutex_lock(&(queuePtr->lock));
     long pop      = queuePtr->pop;
     long push     = queuePtr->push;
     long capacity = queuePtr->capacity;
 
     long newPop = (pop + 1) % capacity;
     if (newPop == push) {
+        pthread_mutex_unlock(&(queuePtr->lock));
         return NULL;
     }
 
     void* dataPtr = queuePtr->elements[newPop];
     queuePtr->pop = newPop;
 
+    pthread_mutex_unlock(&(queuePtr->lock));
     return dataPtr;
 }
 

@@ -73,6 +73,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <pthread.h>
 #include "list.h"
 #include "types.h"
 
@@ -161,6 +162,7 @@ list_alloc (long (*compare)(const void*, const void*))
     listPtr->head.dataPtr = NULL;
     listPtr->head.nextPtr = NULL;
     listPtr->size = 0;
+    pthread_mutex_init(&(listPtr->lock),NULL);
 
     if (compare == NULL) {
         listPtr->compare = &compareDataPtrAddresses; /* default */

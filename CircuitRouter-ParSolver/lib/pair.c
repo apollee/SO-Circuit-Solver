@@ -88,7 +88,7 @@ pair_alloc (void* firstPtr, void* secondPtr)
     if (pairPtr != NULL) {
         pairPtr->firstPtr = firstPtr;
         pairPtr->secondPtr = secondPtr;
-        pthread_mutex_init(pairPtr->&lock);
+        pthread_mutex_init(&(pairPtr->lock),NULL);
     }
 
     return pairPtr;

@@ -54,6 +54,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 #include "coordinate.h"
 #include "grid.h"
 #include "lib/queue.h"
@@ -100,6 +101,7 @@ router_t* router_alloc (long xCost, long yCost, long zCost, long bendCost){
         routerPtr->yCost = yCost;
         routerPtr->zCost = zCost;
         routerPtr->bendCost = bendCost;
+        pthread_mutex_init(&(routerPtr->lock), NULL);
     }
 
     return routerPtr;
@@ -225,6 +227,8 @@ static void traceToNeighbor (grid_t* myGridPtr, point_t* currPtr, point_t* moveP
  * =============================================================================
  */
 static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* dstPtr, long bendCost){
+    
+    pthread_mutex_lock(&(gridPtr->lock));
     vector_t* pointVectorPtr = vector_alloc(1);
     assert(pointVectorPtr);
 
@@ -284,7 +288,7 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
             }
         }
     }
-
+    pthread_mutex_unlock(&(gridPtr->lock));
     return pointVectorPtr;
 }
 
@@ -353,8 +357,12 @@ void router_solve (void* argPtr){
     /*
      * Add my paths to global list
      */
+ 
+   
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
+    pthread_mutex_lock(&(pathVectorListPtr->lock));
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
+    pthread_mutex_unlock(&(pathVectorListPtr->lock));
 
     grid_free(myGridPtr);
     queue_free(myExpansionQueuePtr);

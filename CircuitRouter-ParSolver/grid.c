@@ -208,21 +208,21 @@ void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
         long z = coordinatePtr->z;
         grid_setPoint(gridPtr, x, y, z, GRID_POINT_FULL);
     }
-}
-
-
+} 
 /* =============================================================================
  * grid_addPath_Ptr
  * =============================================================================
  */
 void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
+    pthread_mutex_lock(&(gridPtr->lock));
     long n = vector_getSize(pointVectorPtr);
-
+    
     for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL; 
     }
+    pthread_mutex_unlock(&(gridPtr->lock));
 }
 
 
