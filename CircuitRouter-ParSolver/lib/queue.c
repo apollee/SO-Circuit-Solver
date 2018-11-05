@@ -71,11 +71,11 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <pthread.h>
 #include "types.h"
 #include "queue.h"
-
 
 struct queue {
     long pop; /* points before element to pop */
@@ -94,7 +94,8 @@ enum config {
  * queue_alloc
  * =============================================================================
  */
-queue_t* queue_alloc (long initCapacity)
+queue_t*
+queue_alloc (long initCapacity)
 {
     queue_t* queuePtr = (queue_t*)malloc(sizeof(queue_t));
 
@@ -102,7 +103,7 @@ queue_t* queue_alloc (long initCapacity)
         long capacity = ((initCapacity < 2) ? 2 : initCapacity);
         queuePtr->elements = (void**)malloc(capacity * sizeof(void*));
         if (queuePtr->elements == NULL) {
-            free(queuePtr);
+             free(queuePtr);
             return NULL;
         }
         queuePtr->pop      = capacity - 1;
@@ -131,7 +132,8 @@ queue_free (queue_t* queuePtr)
  * queue_isEmpty
  * =============================================================================
  */
-bool_t queue_isEmpty (queue_t* queuePtr)
+bool_t
+queue_isEmpty (queue_t* queuePtr)
 {
     long pop      = queuePtr->pop;
     long push     = queuePtr->push;
@@ -215,23 +217,35 @@ queue_push (queue_t* queuePtr, void* dataPtr)
 void*
 queue_pop (queue_t* queuePtr)
 {
-    pthread_mutex_lock(&(queuePtr->lock));
+    //pthread_mutex_lock(&(queuePtr->lock));
     long pop      = queuePtr->pop;
     long push     = queuePtr->push;
     long capacity = queuePtr->capacity;
 
     long newPop = (pop + 1) % capacity;
     if (newPop == push) {
-        pthread_mutex_unlock(&(queuePtr->lock));
         return NULL;
     }
 
     void* dataPtr = queuePtr->elements[newPop];
     queuePtr->pop = newPop;
-
-    pthread_mutex_unlock(&(queuePtr->lock));
+    //pthread_mutex_unlock(&(queuePtr->lock));
     return dataPtr;
 }
+
+void queue_lock(queue_t* Queue){
+    if(pthread_mutex_lock(&(Queue->lock)) != 0){
+        perror("Erro no lock");
+        exit(-1);
+    }
+}
+
+void queue_unlock(queue_t* Queue){
+    if(pthread_mutex_unlock(&(Queue->lock)) != 0){
+         perror("Erro no unlock");
+         exit(-1);
+    }
+}    
 
 
 /* =============================================================================
