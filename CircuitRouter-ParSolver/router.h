@@ -54,7 +54,7 @@
 #ifndef ROUTER_H
 #define ROUTER_H 1
 
-
+#include <pthread.h>
 #include "grid.h"
 #include "maze.h"
 #include "lib/vector.h"
@@ -94,6 +94,19 @@ void router_free (router_t* routerPtr);
  */
 void router_solve (void* argPtr);
 
+/* =============================================================================
+ * safeLock
+ * =============================================================================
+ */
+
+void safeLock(pthread_mutex_t* mutex);
+
+/* =============================================================================
+ * safeUnlock
+ * =============================================================================
+ */
+
+void safeUnlock(pthread_mutex_t* mutex);
 
 #endif /* ROUTER_H */
 

@@ -55,6 +55,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <getopt.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include "coordinate.h"
 #include "grid.h"
@@ -63,6 +65,7 @@
 
 
 const unsigned long CACHE_LINE_SIZE = 32UL;
+
 
 /* =============================================================================
  * grid_alloc
@@ -86,6 +89,7 @@ grid_t* grid_alloc (long width, long height, long depth){
                                   + CACHE_LINE_SIZE);
         memset(gridPtr->points, GRID_POINT_EMPTY, (n * sizeof(long)));
     }
+
     return gridPtr;
 }
 
@@ -104,7 +108,6 @@ void grid_free (grid_t* gridPtr){
  * =============================================================================
  */
 void grid_copy (grid_t* dstGridPtr, grid_t* srcGridPtr){
-    
     assert(srcGridPtr->width  == dstGridPtr->width);
     assert(srcGridPtr->height == dstGridPtr->height);
     assert(srcGridPtr->depth  == dstGridPtr->depth);
@@ -119,13 +122,13 @@ void grid_copy (grid_t* dstGridPtr, grid_t* srcGridPtr){
  * =============================================================================
  */
 bool_t grid_isPointValid (grid_t* gridPtr, long x, long y, long z){
-
     if (x < 0 || x >= gridPtr->width  ||
         y < 0 || y >= gridPtr->height ||
         z < 0 || z >= gridPtr->depth)
     {
         return FALSE;
-    } 
+    }
+
     return TRUE;
 }
 
@@ -197,7 +200,7 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
  * grid_addPath
  * =============================================================================
  */
-void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
+bool_t  grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
 
@@ -206,23 +209,29 @@ void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
         long x = coordinatePtr->x;
         long y = coordinatePtr->y;
         long z = coordinatePtr->z;
+        if ( grid_isPointFull(gridPtr,x,y,z)){
+            return FALSE;
+        }
         grid_setPoint(gridPtr, x, y, z, GRID_POINT_FULL);
     }
-} 
+    return TRUE;
+}
+
+
 /* =============================================================================
  * grid_addPath_Ptr
  * =============================================================================
  */
 void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
-    pthread_mutex_lock(&(gridPtr->lock));
+    //pthread_mutex_lock(&(gridPtr->lock));
     long n = vector_getSize(pointVectorPtr);
-    
+
     for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
         *gridPointPtr = GRID_POINT_FULL; 
     }
-    pthread_mutex_unlock(&(gridPtr->lock));
+    //pthread_mutex_unlock(&(gridPtr->lock));
 }
 
 
@@ -230,26 +239,23 @@ void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
  * grid_print
  * =============================================================================
  */
-void grid_print (grid_t* gridPtr, FILE* file_name){
+void grid_print (grid_t* gridPtr, FILE *fp){
     long width  = gridPtr->width;
     long height = gridPtr->height;
     long depth  = gridPtr->depth;
     long z;
-
-    fprintf(file_name, "Routed Maze: \n");    
-
     for (z = 0; z < depth; z++) {
-        fprintf(file_name, "[z = %li]\n", z);
+        fprintf(fp, "[z = %li]\n", z);
         long x;
         for (x = 0; x < width; x++) {
             long y;
             for (y = 0; y < height; y++) {
-                fprintf(file_name, "%4li", *grid_getPointRef(gridPtr, x, y, z));
+                fprintf(fp,"%4li", *grid_getPointRef(gridPtr, x, y, z));
             }
-            fprintf(file_name, "\n"); 
+            fputs("\n",fp);
         }
+        fputs("\n",fp);
     }
-
 }
 
 

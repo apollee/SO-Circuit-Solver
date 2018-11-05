@@ -1,16 +1,63 @@
- /* =============================================================================
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * This code is an adaptation of the Lee algorithm's implementation originally included in the STAMP Benchmark
+ * by Stanford University.
  *
- * CircuitRouter-ParSolver.c
+ * The original copyright notice is included below.
+ *
+  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * Copyright (C) Stanford University, 2006.  All Rights Reserved.
+ * Author: Chi Cao Minh
+ *
+ * =============================================================================
+ *
+ * Unless otherwise noted, the following license applies to STAMP files:
+ *
+ * Copyright (c) 2007, Stanford University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *
+ *     * Neither the name of Stanford University nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY STANFORD UNIVERSITY ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL STANFORD UNIVERSITY BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * =============================================================================
+ *
+ * CircuitRouter-SeqSolver.c
  *
  * =============================================================================
  */
 
 
-#include <assert.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <getopt.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "lib/list.h"
 #include "maze.h"
@@ -31,10 +78,10 @@ enum param_defaults {
     PARAM_DEFAULT_XCOST    = 1,
     PARAM_DEFAULT_YCOST    = 1,
     PARAM_DEFAULT_ZCOST    = 2,
-    PARAM_DEFAULT_THREADS  = -1, /*default a -1 para rebentar*/ 
+    PARAM_DEFAULT_THREADS  = -1,
 };
 
-bool_t global_doPrint = FALSE;
+bool_t global_doPrint = TRUE;
 char* global_inputFile = NULL;
 long global_params[256]; /* 256 = ascii limit */
 
@@ -44,14 +91,14 @@ long global_params[256]; /* 256 = ascii limit */
  * =============================================================================
  */
 static void displayUsage (const char* appName){
-    printf("Usage: %s [options]\n", appName);
+    printf("Usage: %s [options] input_filename\n", appName);
     puts("\nOptions:                            (defaults)\n");
     printf("    b <INT>    [b]end cost          (%i)\n", PARAM_DEFAULT_BENDCOST);
-    printf("    p          [p]rint routed maze  (false)\n");
     printf("    x <UINT>   [x] movement cost    (%i)\n", PARAM_DEFAULT_XCOST);
     printf("    y <UINT>   [y] movement cost    (%i)\n", PARAM_DEFAULT_YCOST);
     printf("    z <UINT>   [z] movement cost    (%i)\n", PARAM_DEFAULT_ZCOST);
-    printf("    t <UINT>   [t] number of threads (%i)\n", PARAM_DEFAULT_THREADS);
+    printf("    t <UINT>   [t] number of threads (%i)\n",
+PARAM_DEFAULT_THREADS);
     printf("    h          [h]elp message       (false)\n");
     exit(1);
 }
@@ -74,8 +121,9 @@ static void setDefaultParams (){
  * parseArgs
  * =============================================================================
  */
-char* parseArgs (long argc, char* const argv[]){
+static void parseArgs (long argc, char* const argv[]){
     long opt;
+
     opterr = 0;
 
     setDefaultParams();
@@ -86,32 +134,49 @@ char* parseArgs (long argc, char* const argv[]){
             case 'x':
             case 'y':
             case 'z':
-            case 't':
+	    case 't':
                 global_params[(unsigned char)opt] = atol(optarg);
                 break;
             case '?':
             case 'h':
+                displayUsage(argv[0]);
             default:
-                opterr++;
                 break;
         }
     }
-     
-    if(optind ==  argc - 1){
-        return argv[optind];
-    }else if(optind > argc - 1){
-        fprintf(stderr, "Non-optional arguments\n");
-        opterr++;
-    }else{
-        fprintf(stderr, "No file name.\n");
-    }
 
-
-    if (opterr){ 
+    if (optind >= argc) {
+        fprintf(stderr, "Missing input file\n");
         displayUsage(argv[0]);
     }
 
-    return NULL; 
+    global_inputFile = argv[optind];
+}
+
+/* =============================================================================
+ * outputFile
+ * =============================================================================
+ */
+FILE * outputFile() {
+    FILE *fp;
+
+    char result_outputFile[strlen(global_inputFile) + strlen(".res") + 1];
+    sprintf(result_outputFile, "%s.res", global_inputFile);
+
+    if (access(result_outputFile, F_OK) == 0) {
+        char old_outputFile[strlen(global_inputFile) + strlen(".res.old") + 1];
+        sprintf(old_outputFile, "%s.res.old", global_inputFile);
+        if (rename(result_outputFile, old_outputFile) == -1) {
+            perror("Error renaming output file");
+            exit(EXIT_FAILURE);;
+        }
+    }
+    fp = fopen(result_outputFile, "wt");
+    if (fp == NULL) {
+        perror("Error opening output file");
+        exit(EXIT_FAILURE);
+    }
+    return fp;
 }
 
 
@@ -123,29 +188,14 @@ int main(int argc, char** argv){
     /*
      * Initialization
      */
-    
-    FILE *file;
-    FILE *output_file; 
-    char* file_input_name;
-    char* file_output_name;
     int N_threads, i;
-
-    file_input_name = parseArgs(argc, (char** const)argv);
-    if (access(file_input_name, F_OK) != 0) { //input file exists
-	fprintf( stderr, "The file doesn't exist.\n");
-    	exit(1);
-    }
-
+    parseArgs(argc, argv);
+    FILE* resultFp = outputFile();
     N_threads =  global_params[PARAM_THREADS];
     pthread_t tid[N_threads];
-    
-       file = fopen(file_input_name, "r");    
-    file_output_name = output_fname(file_input_name); /*returns the name of the output file*/ 
-    output_file = fopen(file_output_name, "a");
-
     maze_t* mazePtr = maze_alloc();
     assert(mazePtr);
-    long numPathToRoute = maze_read(mazePtr, file, output_file);
+    long numPathToRoute = maze_read(mazePtr, global_inputFile, resultFp);
     router_t* routerPtr = router_alloc(global_params[PARAM_XCOST],
                                        global_params[PARAM_YCOST],
                                        global_params[PARAM_ZCOST],
@@ -159,9 +209,7 @@ int main(int argc, char** argv){
     TIMER_READ(startTime);
 
     for(i=0; i< N_threads; i++){    
-        if(pthread_create(&tid[i], 0, (void *) router_solve, &routerArg) == 0){
-            printf("Criada a tarefa %lu\n", tid[i]);
-        }else{
+        if(pthread_create(&tid[i], 0, (void *) router_solve, &routerArg) != 0){
             printf("Erro\n");
             exit(-1);
         }
@@ -172,11 +220,9 @@ int main(int argc, char** argv){
         pthread_join(tid[i], NULL);
     }
    
-     /*router_solve((void *)&routerArg);*/
 
     TIMER_T stopTime;
     TIMER_READ(stopTime);
-
 
     long numPathRouted = 0;
     list_iter_t it;
@@ -184,18 +230,18 @@ int main(int argc, char** argv){
     while (list_iter_hasNext(&it, pathVectorListPtr)) {
         vector_t* pathVectorPtr = (vector_t*)list_iter_next(&it, pathVectorListPtr);
         numPathRouted += vector_getSize(pathVectorPtr);
-	}
- 
-    fprintf(output_file, "Paths routed    = %li\n", numPathRouted);
-    fprintf(output_file, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
+    }
+    fprintf(resultFp, "Paths routed    = %li\n", numPathRouted);
+    fprintf(resultFp, "Elapsed time    = %f seconds\n", TIMER_DIFF_SECONDS(startTime, stopTime));
+
 
     /*
      * Check solution and clean up
      */
     assert(numPathRouted <= numPathToRoute);
-    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, output_file);
+    bool_t status = maze_checkPaths(mazePtr, pathVectorListPtr, resultFp, global_doPrint);
     assert(status == TRUE);
-    fprintf(output_file, "Verification passed.");
+    fputs("Verification passed.\n",resultFp);
 
     maze_free(mazePtr);
     router_free(routerPtr);
@@ -212,9 +258,7 @@ int main(int argc, char** argv){
     }
     list_free(pathVectorListPtr);
 
-    fclose(file);
-    fclose(output_file);
-    free(file_output_name);
+    fclose(resultFp);
     exit(0);
 }
 
@@ -224,4 +268,4 @@ int main(int argc, char** argv){
  * End of CircuitRouter-SeqSolver.c
  *
  * =============================================================================
- */    
+ */
