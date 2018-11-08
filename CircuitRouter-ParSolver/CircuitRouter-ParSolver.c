@@ -210,14 +210,16 @@ int main(int argc, char** argv){
 
     for(i=0; i< N_threads; i++){    
         if(pthread_create(&tid[i], 0, (void *) router_solve, &routerArg) != 0){
-            printf("Erro\n");
+            perror("Erro na criacao de threads");
             exit(-1);
         }
     
     }
 
     for(i=0; i < N_threads; i++){
-        pthread_join(tid[i], NULL);
+        if(!pthread_join(tid[i], NULL)){
+            perror("Erro no join das threads");
+        }
     }
    
 

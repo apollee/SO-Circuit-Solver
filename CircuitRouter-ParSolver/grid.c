@@ -79,7 +79,10 @@ grid_t* grid_alloc (long width, long height, long depth){
         gridPtr->width  = width;
         gridPtr->height = height;
         gridPtr->depth  = depth;
-        pthread_mutex_init(&(gridPtr->lock), NULL);
+        if(!pthread_mutex_init(&(gridPtr->lock), NULL)){
+            perror("Erro no init do lock");
+            exit(-1);
+        }
         long n = width * height * depth;
         long* points_unaligned = (long*)malloc(n * sizeof(long) + CACHE_LINE_SIZE);
         assert(points_unaligned);
@@ -200,7 +203,7 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value){
  * grid_addPath
  * =============================================================================
  */
-bool_t  grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
+void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
     long n = vector_getSize(pointVectorPtr);
 
@@ -209,29 +212,30 @@ bool_t  grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr){
         long x = coordinatePtr->x;
         long y = coordinatePtr->y;
         long z = coordinatePtr->z;
-        if ( grid_isPointFull(gridPtr,x,y,z)){
-            return FALSE;
-        }
         grid_setPoint(gridPtr, x, y, z, GRID_POINT_FULL);
     }
-    return TRUE;
 }
-
 
 /* =============================================================================
  * grid_addPath_Ptr
  * =============================================================================
  */
-void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
+bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr){
     long i;
-    //pthread_mutex_lock(&(gridPtr->lock));
     long n = vector_getSize(pointVectorPtr);
 
     for (i = 1; i < (n-1); i++) {
         long* gridPointPtr = (long*)vector_at(pointVectorPtr, i);
+        if ( *gridPointPtr == GRID_POINT_FULL){
+            for(long j = 1; j < i; j++){
+                long* gridPointPtr = (long*)vector_at(pointVectorPtr, j);
+                *gridPointPtr = GRID_POINT_EMPTY;
+            }
+            return FALSE;
+        }
         *gridPointPtr = GRID_POINT_FULL; 
     }
-    //pthread_mutex_unlock(&(gridPtr->lock));
+    return TRUE;
 }
 
 

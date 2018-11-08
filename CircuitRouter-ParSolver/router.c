@@ -100,9 +100,11 @@ router_t* router_alloc (long xCost, long yCost, long zCost, long bendCost){
         routerPtr->yCost = yCost;
         routerPtr->zCost = zCost;
         routerPtr->bendCost = bendCost;
-        pthread_mutex_init(&(routerPtr->lock), NULL);
+        if(!pthread_mutex_init(&(routerPtr->lock), NULL)){
+            perror("Erro no init do lock");
+            exit(-1);
+        }
     }
-
     return routerPtr;
 }
 
@@ -161,9 +163,8 @@ static bool_t doExpansion (router_t* routerPtr, grid_t* myGridPtr, queue_t* queu
     bool_t isPathFound = FALSE;
 
     while (!queue_isEmpty(queuePtr)) {
-
         long* gridPointPtr = (long*)queue_pop(queuePtr);
-        if (gridPointPtr == dstGridPointPtr) {
+            if (gridPointPtr == dstGridPointPtr) {
             isPathFound = TRUE;
             break;
         }
@@ -338,39 +339,36 @@ void router_solve (void* argPtr){
 
         bool_t success = FALSE;
         vector_t* pointVectorPtr = NULL;
-
-        safeLock(&(gridPtr->lock));
-        grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */
-        safeUnlock(&(gridPtr->lock));
-        if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
-                         srcPtr, dstPtr)) {
-            pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
-            if (pointVectorPtr) {
-                safeLock(&(gridPtr->lock));
-                 
-                grid_addPath_Ptr(gridPtr, pointVectorPtr);
-        
-                safeUnlock(&(gridPtr->lock));
-                success = TRUE;
-            }
-        }
-
-        if (success) {
-            bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
-            assert(status);
-        }
+        while(!success){
+        	grid_copy(myGridPtr, gridPtr); /* create a copy of the grid, over which the expansion and trace back phases will be executed. */ 
+	        if (doExpansion(routerPtr, myGridPtr, myExpansionQueuePtr,
+	                         srcPtr, dstPtr)) {
+	            pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
+	            if (pointVectorPtr) {
+	                safeLock(&(gridPtr->lock));
+	                success = (grid_addPath_Ptr(gridPtr, pointVectorPtr));
+	                safeUnlock(&(gridPtr->lock));
+	      		}
+	        }
+	        else{
+	        	break;
+	        }
+        	if (success) {
+            	bool_t status = vector_pushBack(myPathVectorPtr,(void*)pointVectorPtr);
+            	assert(status);
+        	}
+    	}
     }
-
     /*
      * Add my paths to global list
      */
     list_t* pathVectorListPtr = routerArgPtr->pathVectorListPtr;
     safeLock(&(pathVectorListPtr->lock));
     list_insert(pathVectorListPtr, (void*)myPathVectorPtr);
-
+	safeUnlock(&(pathVectorListPtr->lock));
     grid_free(myGridPtr);
     queue_free(myExpansionQueuePtr);
-    safeUnlock(&(pathVectorListPtr->lock));
+    
 }
 
 void safeLock(pthread_mutex_t *mutex){

@@ -72,7 +72,10 @@ coordinate_t* coordinate_alloc (long x, long y, long z){
         coordinatePtr->x = x;
         coordinatePtr->y = y;
         coordinatePtr->z = z;
-        pthread_mutex_init(&(coordinatePtr->lock), NULL);
+        if(!pthread_mutex_init(&(coordinatePtr->lock), NULL)){
+            perror("Erro no init do lock ");
+            exit(-1);
+        }
     }
 
     return coordinatePtr;

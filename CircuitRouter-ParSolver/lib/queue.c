@@ -109,7 +109,10 @@ queue_alloc (long initCapacity)
         queuePtr->pop      = capacity - 1;
         queuePtr->push     = 0;
         queuePtr->capacity = capacity;
-        pthread_mutex_init(&(queuePtr->lock),NULL);
+        if(!pthread_mutex_init(&(queuePtr->lock),NULL)){
+            perror("Erro no init do lock");
+            exit(-1);
+        }
     }
 
     return queuePtr;

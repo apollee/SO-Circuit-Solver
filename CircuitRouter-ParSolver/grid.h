@@ -148,14 +148,14 @@ void grid_setPoint (grid_t* gridPtr, long x, long y, long z, long value);
  * grid_addPath
  * =============================================================================
  */
-bool_t grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr);
+void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr);
 
 
 /* =============================================================================
  * grid_addPath_Ptr
  * =============================================================================
  */
-void grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr);
+bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr);
 
 
 /* =============================================================================

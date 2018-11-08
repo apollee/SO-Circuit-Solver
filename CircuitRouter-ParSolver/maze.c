@@ -79,7 +79,10 @@ maze_t* maze_alloc (){
         mazePtr->wallVectorPtr = vector_alloc(1);
         mazePtr->srcVectorPtr = vector_alloc(1);
         mazePtr->dstVectorPtr = vector_alloc(1);
-        pthread_mutex_init(&(mazePtr->lock),NULL);
+        if(!pthread_mutex_init(&(mazePtr->lock),NULL)){
+            perror("Erro no init do lock");
+            exit(-1);
+        }
         assert(mazePtr->workQueuePtr &&
                mazePtr->wallVectorPtr &&
                mazePtr->srcVectorPtr &&
@@ -239,8 +242,7 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
         }
         
     } /* iterate over lines in input file */
-    
-    
+                                   
     /*
      * Initialize grid contents
      */
