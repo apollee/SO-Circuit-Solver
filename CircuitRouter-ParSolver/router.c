@@ -100,8 +100,8 @@ router_t* router_alloc (long xCost, long yCost, long zCost, long bendCost){
         routerPtr->yCost = yCost;
         routerPtr->zCost = zCost;
         routerPtr->bendCost = bendCost;
-        if(!pthread_mutex_init(&(routerPtr->lock), NULL)){
-            perror("Erro no init do lock");
+        if(pthread_mutex_init(&(routerPtr->lock), NULL)){
+            perror("Erro in the initialization of the mutex");
             exit(-1);
         }
     }
@@ -114,6 +114,10 @@ router_t* router_alloc (long xCost, long yCost, long zCost, long bendCost){
  * =============================================================================
  */
 void router_free (router_t* routerPtr){
+    if(pthread_mutex_destroy(&(routerPtr->lock))){
+        perror("Erro in the destruction of the mutex");
+        exit(-1);
+    }
     free(routerPtr);
 }
 
@@ -228,7 +232,6 @@ static void traceToNeighbor (grid_t* myGridPtr, point_t* currPtr, point_t* moveP
  */
 static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* dstPtr, long bendCost){
 
-    //pthread_mutex_lock(&(gridPtr->lock));
     vector_t* pointVectorPtr = vector_alloc(1);
     assert(pointVectorPtr);
 
@@ -289,7 +292,6 @@ static vector_t* doTraceback (grid_t* gridPtr, grid_t* myGridPtr, coordinate_t* 
         }
     }
 
-    //pthread_mutex_unlock(&(gridPtr->lock));
     return pointVectorPtr;
 }
 
@@ -345,10 +347,11 @@ void router_solve (void* argPtr){
 	                         srcPtr, dstPtr)) {
 	            pointVectorPtr = doTraceback(gridPtr, myGridPtr, dstPtr, bendCost);
 	            if (pointVectorPtr) {
-	                safeLock(&(gridPtr->lock));
 	                success = (grid_addPath_Ptr(gridPtr, pointVectorPtr));
-	                safeUnlock(&(gridPtr->lock));
-	      		}
+	               if(success == FALSE){
+                    vector_free(pointVectorPtr);
+                   }
+                }
 	        }
 	        else{
 	        	break;
@@ -371,19 +374,6 @@ void router_solve (void* argPtr){
     
 }
 
-void safeLock(pthread_mutex_t *mutex){
-    if(pthread_mutex_lock(mutex) != 0){
-        perror("Erro no lock");
-        exit(-1);
-    }
-}
-
-void safeUnlock(pthread_mutex_t *mutex){
-    if(pthread_mutex_unlock(mutex) != 0){
-        perror("Erro no unlock");
-        exit(-1);
-    }
-}
 
 /* =============================================================================
  *

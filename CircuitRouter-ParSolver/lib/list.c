@@ -70,7 +70,7 @@
  * =============================================================================
  */
 
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
@@ -162,7 +162,10 @@ list_alloc (long (*compare)(const void*, const void*))
     listPtr->head.dataPtr = NULL;
     listPtr->head.nextPtr = NULL;
     listPtr->size = 0;
-    pthread_mutex_init(&(listPtr->lock),NULL);
+    if(pthread_mutex_init(&(listPtr->lock),NULL)){
+        perror("Error in the initialization of the mutex");
+        exit(-1);
+    }
 
     if (compare == NULL) {
         listPtr->compare = &compareDataPtrAddresses; /* default */
@@ -206,6 +209,10 @@ freeList (list_node_t* nodePtr)
 void
 list_free (list_t* listPtr)
 {
+    if(pthread_mutex_destroy(&(listPtr->lock))){
+        perror("Error in the destruction of the mutex");
+        exit(-1);
+    }
     freeList(listPtr->head.nextPtr);
     free(listPtr);
 }

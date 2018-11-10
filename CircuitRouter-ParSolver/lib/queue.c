@@ -109,8 +109,8 @@ queue_alloc (long initCapacity)
         queuePtr->pop      = capacity - 1;
         queuePtr->push     = 0;
         queuePtr->capacity = capacity;
-        if(!pthread_mutex_init(&(queuePtr->lock),NULL)){
-            perror("Erro no init do lock");
+        if(pthread_mutex_init(&(queuePtr->lock),NULL)){
+            perror("Error in the initialization of the mutex");
             exit(-1);
         }
     }
@@ -126,6 +126,10 @@ queue_alloc (long initCapacity)
 void
 queue_free (queue_t* queuePtr)
 {
+    if(pthread_mutex_destroy(&(queuePtr->lock))){
+        perror("Error in the destruction of the mutex");
+        exit(-1);
+    }
     free(queuePtr->elements);
     free(queuePtr);
 }
@@ -236,16 +240,26 @@ queue_pop (queue_t* queuePtr)
     return dataPtr;
 }
 
+/* =============================================================================
+ * queue_lock
+ * =============================================================================
+ */
+
 void queue_lock(queue_t* Queue){
     if(pthread_mutex_lock(&(Queue->lock)) != 0){
-        perror("Erro no lock");
+        perror("Error in locking the mutex");
         exit(-1);
     }
 }
 
+/* =============================================================================
+ * queue_unlock
+ * =============================================================================
+ */
+
 void queue_unlock(queue_t* Queue){
     if(pthread_mutex_unlock(&(Queue->lock)) != 0){
-         perror("Erro no unlock");
+         perror("Error in unlocking the mutex");
          exit(-1);
     }
 }    

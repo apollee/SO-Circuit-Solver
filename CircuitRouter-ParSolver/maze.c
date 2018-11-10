@@ -79,8 +79,8 @@ maze_t* maze_alloc (){
         mazePtr->wallVectorPtr = vector_alloc(1);
         mazePtr->srcVectorPtr = vector_alloc(1);
         mazePtr->dstVectorPtr = vector_alloc(1);
-        if(!pthread_mutex_init(&(mazePtr->lock),NULL)){
-            perror("Erro no init do lock");
+        if(pthread_mutex_init(&(mazePtr->lock),NULL)){
+            perror("Error in the initialization of the mutex");
             exit(-1);
         }
         assert(mazePtr->workQueuePtr &&
@@ -123,6 +123,10 @@ void maze_free (maze_t* mazePtr){
     assert(vector_getSize(mazePtr->dstVectorPtr) == 0);
     vector_free(mazePtr->dstVectorPtr);
 
+    if(pthread_mutex_destroy(&(mazePtr->lock))){
+        perror("Error in the destruction of the mutex");
+        exit(-1);
+    }
     free(mazePtr);
 }
 
@@ -271,7 +275,7 @@ long maze_read (maze_t* mazePtr, char * input, FILE * fp){
         queue_push(workQueuePtr, (void*)coordinatePairPtr);
     }
     list_free(workListPtr);
-    
+    fclose(inputFile);
     return vector_getSize(srcVectorPtr);
 }
 

@@ -50,7 +50,7 @@
  * =============================================================================
  */
 
-
+#include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -72,8 +72,8 @@ coordinate_t* coordinate_alloc (long x, long y, long z){
         coordinatePtr->x = x;
         coordinatePtr->y = y;
         coordinatePtr->z = z;
-        if(!pthread_mutex_init(&(coordinatePtr->lock), NULL)){
-            perror("Erro no init do lock ");
+        if(pthread_mutex_init(&(coordinatePtr->lock), NULL)){
+            perror("Error in the initialization of the mutex");
             exit(-1);
         }
     }
@@ -87,6 +87,10 @@ coordinate_t* coordinate_alloc (long x, long y, long z){
  * =============================================================================
  */
 void coordinate_free (coordinate_t* coordinatePtr){
+    if(pthread_mutex_destroy(&(coordinatePtr->lock))){
+        perror("Error in the destruction of the mutex");
+        exit(-1);
+    }
     free(coordinatePtr);
 }
 

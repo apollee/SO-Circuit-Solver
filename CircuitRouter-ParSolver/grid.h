@@ -65,8 +65,8 @@ typedef struct grid {
     long depth;
     long* points;
     long* points_unaligned;
-    pthread_mutex_t lock;
-} grid_t;
+    pthread_mutex_t * lockVectorPtr;
+ } grid_t;
 
 enum {
     GRID_POINT_FULL  = -2L,
@@ -157,6 +157,29 @@ void grid_addPath (grid_t* gridPtr, vector_t* pointVectorPtr);
  */
 bool_t grid_addPath_Ptr (grid_t* gridPtr, vector_t* pointVectorPtr);
 
+/* =============================================================================
+ * grid_calculateRef
+ * =============================================================================
+ */
+long grid_calculateRef(grid_t* gridPtr, long* gridPointPtr);
+
+/* =============================================================================
+ * grid_unlockThreads
+ * =============================================================================
+ */
+void grid_unlockThreads(grid_t* gridPtr, vector_t* pointVectorPtr, long index);
+/* =============================================================================
+ * safeUnlock
+ * =============================================================================
+ */
+void safeUnlock(pthread_mutex_t *mutex);
+
+/* =============================================================================
+ * safeLock
+ * =============================================================================
+ */
+
+void safeLock(pthread_mutex_t* mutex);
 
 /* =============================================================================
  * grid_print

@@ -209,16 +209,17 @@ int main(int argc, char** argv){
     TIMER_READ(startTime);
 
     for(i=0; i< N_threads; i++){    
-        if(pthread_create(&tid[i], 0, (void *) router_solve, &routerArg) != 0){
-            perror("Erro na criacao de threads");
+        if(pthread_create(&tid[i], 0, (void *) router_solve, &routerArg)){
+            perror("Error in the creation of the threads");
             exit(-1);
         }
     
     }
 
     for(i=0; i < N_threads; i++){
-        if(!pthread_join(tid[i], NULL)){
-            perror("Erro no join das threads");
+        if(pthread_join(tid[i], NULL)){
+            perror("Error in pthread_join");
+            exit(-1);
         }
     }
    
