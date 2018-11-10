@@ -1,2 +1,2 @@
-# SO_1
+# SO
 Project from my operating systems college class.
