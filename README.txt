@@ -1,5 +1,5 @@
  | _______________ |			
- | |SO_2 project:| |
+ | |SO_3 project:| |
  | |-README.txt  | |
  | |             | |
  | |             | |
@@ -17,60 +17,58 @@ L___________________J     \ \___\/
     
 // The Directory structure //
 
-The main directory contains three subdirectories and three files. One of the files consists of a script, the other of the makefile of the entire project(it calls the makefiles inside of the subdirectories) and the other this exact file.
+The main directory contains five subdirectories and two files. One of the files consists of the makefile of the entire project(it calls the makefiles inside of the subdirectories) and the other this exact file.
 
 The subdirectory called CircuitSeqSolver has the files of the sequential solution to the problem and inside of it there is a directory called lib which is a library of auxiliary structures and a makefile(for the files in the directory).
 
-The folder called CircuitParSolver has the same structure and files as CircuitSeqSolver, the only difference is that it contains the files of the parallel solution.
+The subdirectory called CircuitRouter-AdvShell has the files that correspond to the server and a makefile(for the files in the directory). It also contains a subdirectory called lib that which is a library of auxiliary structures.
+
+The subdirectory called CircuitRouter-Client has the files that correspond to the client that sends requests to the server(CircuitRouter-Client) and a makefile(for the files in the directory). It also contains a subdirectory called lib that which is a library of auxiliary structures.
+
+The subdirectory called lib is a library of auxiliary structures.
 
 At last, there is a folder called inputs that has a number of .txt files that can be used to test the project. Inside of this directory there is a subdirectory called results where there is a corresponding number of .csv files to the .txt files in the parent directory. This .csv files display the output of the project using each one of the .txt files.
 
-├── DoTest.sh
+├── lib
 ├── Makefile
 ├── README.txt
 ├── CircuitSeqSolver
 │   ├── lib
 │   ├── Makefile
-├── CircuitParSolver
+├── CircuitRouter-AdvShell
+│   ├── lib
+│   ├── Makefile
+├── CircuitRouter-Client
 │   ├── lib
 │   ├── Makefile
 ├── inputs
 │   ├── results
 
-
-
 // Steps for compilation and execution //
 
-There are two different ways to compile and execute the project. The first one is by using the script doTest.sh and the other is by using the command line and ./CircuitParSolver. Both of them are explained below.
+There is only one way to compile and execute the project. Its by using the command line and executing first ./CircuitRouter-AdvShell and secondly ./CircuitRouter-Client. It is better explained below.
 
-Compilation and execution with the script doTest.sh:
-    - The script receives two arguments:
-        1) N - the number of tasks it will execute
-        2) The path to the file with the problem to analyse
-    - The number of tasks should be > 0    
+Compilation and execution using the command line and ./CircuitAdvShell:
+    - It receives one argument:
+        1) The number of maxchildren
+    - The number of maxchildren should be > 0
     - It should be run in the following way:
-        ./doTest N path_to_file
-    - Example: 
-        ./doTest 4 inputs/random-x128-y128-z5-n128.txt
-
-Compilation and execution using the command line and ./CircuitParSolver:
-    - It has a flag and receives two arguments:
-        1) Using the flag -t it should receive the number of tasks(N) it will execute 
-        2) The path to the file with the problem to analyse
-    - The number of tasks should be > 0
-    - It should be run in the following way:
-        ./CircuitParSolver -t N path_to_file
+        ./CircuitRouter-AdvShell maxchildren
     - Example:
-        ./CircuitParSolver -t 4 ../inputs/random-x128-y128-z5-n128.txt
+        ./CircuitRouter-AdvShell 4
 
-
+Execution using the command line and ./CircuitRouter-Client:
+    - It receives one argument:
+	1) The path to the pipe: ../CircuitRouter-AdvShell/CircuitRouter-AdvShell.pipe
+    -Example:
+	./CircuitRouter-Client ../CircuitRouter-AdvShell/CircuitRouter-AdvShell.pipe
 
 // Description of the processor and operating system //
 
 Operating System: Linux #39-Ubuntu SMP Mon Sep 24 16:19:90 UTC 2018
 Model name: Intel(R) Core(TM) i7-7500U CPU @ 2.70 GHz
 Architecture: x86_64
-Processors: 4
+Cpu cores: 2
 CPU MHz: 800.017
 CPU max MHz: 3500,0000
 CPU min MHz: 400,0000
